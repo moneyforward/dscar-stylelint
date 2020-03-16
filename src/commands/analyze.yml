@@ -3,11 +3,25 @@ parameters:
   starting-points:
     description: Specify the path of starting to search for files to analyze (Multiple paths can be specified by separating them with line feed)
     type: string
-    default: "**/*.{css,less,sass,scss,sss}"
+    default: "."
+  patterns-to-include:
+    description: Specify patterns to include by regular expression (Multiple patterns can be specified by separating them with line feed)
+    type: string
+    default: '.*\.(css|less|sass|scss|sss)$'
+  patterns-to-exclude:
+    description: Specify patterns to exclude by regular expression (Multiple patterns can be specified by separating them with line feed)
+    type: string
+    default: |
+        ^\./\.git/.*
+        ^\./node_modules/.*
   analysis-arguments:
     description: Arguments of analysis command
     type: string
     default: ""
+  result-path:
+    description: Path to save analysis result
+    type: string
+    default: "/dev/null"
   no-analysis-output-timeout:
     description: Elapsed time the command can run without output. The string is a decimal with unit suffix, such as “20m”, “1.25h”, “5s”
     type: string
@@ -22,6 +36,10 @@ parameters:
     type: enum
     enum: ["/dev/stdout", "/dev/stderr", "/dev/null"]
     default: "/dev/null"
+  max-procs:
+    description: Specify the maximum number of processes to run at the same time
+    type: integer
+    default: 1
 steps:
   - dscar/analyze:
       step-name: Analyze code statically using stylelint
@@ -34,13 +52,18 @@ steps:
               cat \<<-EOT >> $BASH_ENV
               export TRANSFORMATION_ARGUMENTS=(
                 -rM
-                'map((@html "<file name=\"\(.source)\">")+"\(.warnings|map(@html "<error source=\"\(.rule)\" severity=\"\(.severity)\" message=\"\(.text)\" line=\"(.line)\" column=\"\(.column)\" />")|join(""))</file>") | "<checkstyle>\(join(""))</checkstyle>"'
+                'flatten | map((@html "<file name=\"\(.source)\">") + "\(.warnings | map(@html "<error source=\"\(.rule)\" severity=\"\(.severity)\" message=\"\(.text)\" line=\"(.line)\" column=\"\(.column)\" />") | join(""))</file>") | "<checkstyle>\(join(""))</checkstyle>"'
               )
               EOT
         - steps: << parameters.prepare >>
       analysis-command: npx
       analysis-arguments: stylelint << parameters.analysis-arguments >> --formatter=json --no-color --allow-empty-input
       transformation-command: jq
+      should-find: "true"
       starting-points: << parameters.starting-points >>
+      patterns-to-include: << parameters.patterns-to-include >>
+      patterns-to-exclude: << parameters.patterns-to-exclude >>
+      result-path: << parameters.result-path >>
       no-output-timeout: << parameters.no-analysis-output-timeout >>
       redirecting-output: << parameters.redirecting-output >>
+      max-procs: << parameters.max-procs >>
