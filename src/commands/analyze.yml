@@ -18,6 +18,10 @@ parameters:
     description: Arguments of analysis command
     type: string
     default: ""
+  error-pattern:
+    description: Specify the pattern if you want to detect analyzing errors from the standard error
+    type: string
+    default: '.*'
   result-path:
     description: Path to save analysis result
     type: string
@@ -58,6 +62,7 @@ steps:
         - steps: << parameters.prepare >>
       analysis-command: npx
       analysis-arguments: stylelint << parameters.analysis-arguments >> --formatter=json --no-color --allow-empty-input
+      error-pattern: << parameters.error-pattern >>
       transformation-command: jq
       should-find: "true"
       starting-points: << parameters.starting-points >>
