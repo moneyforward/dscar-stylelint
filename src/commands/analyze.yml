@@ -22,10 +22,10 @@ parameters:
     description: Specify the pattern if you want to detect analyzing errors from the standard error
     type: string
     default: '.*'
-  result-path:
-    description: Path to save analysis result
+  analysis-results-path:
+    description: "Specify the path to save the analysis results if you need to change it (default: /tmp/dscar/analysis-results)"
     type: string
-    default: "/dev/null"
+    default: ""
   no-analysis-output-timeout:
     description: Elapsed time the command can run without output. The string is a decimal with unit suffix, such as “20m”, “1.25h”, “5s”
     type: string
@@ -47,6 +47,7 @@ parameters:
 steps:
   - dscar/analyze:
       step-name: Analyze code statically using stylelint
+      analysis-name: stylelint
       prepare:
         - run: sudo apt-get install jq
         - run:
@@ -68,7 +69,7 @@ steps:
       starting-points: << parameters.starting-points >>
       patterns-to-include: << parameters.patterns-to-include >>
       patterns-to-exclude: << parameters.patterns-to-exclude >>
-      result-path: << parameters.result-path >>
+      analysis-results-path: << parameters.analysis-results-path >>
       no-output-timeout: << parameters.no-analysis-output-timeout >>
       redirecting-output: << parameters.redirecting-output >>
       max-procs: << parameters.max-procs >>
