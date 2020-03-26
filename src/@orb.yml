@@ -3,11 +3,11 @@ version: 2.1
 description: Delta stylelint reports
 
 display:
-  home_url: https://github.com/naokikimura/dscar-stylelint
-  source_url: https://github.com/naokikimura/dscar-stylelint
+  home_url: https://corp.moneyforward.com/
+  source_url: https://github.com/moneyforward/dscar-stylelint
 
 orbs:
-  dscar: naokikimura/dscar@0.9.0
+  dscar: moneyforward/dscar@1.0.0
 
 executors:
   default:
