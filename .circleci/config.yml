@@ -1,0 +1,70 @@
+version: 2.1
+
+parameters:
+  run-integration-tests:
+    type: boolean
+    default: false
+  dev-orb-version:
+    type: string
+    default: "dev:alpha"
+  project-git_url:
+    type: string
+    default: ""
+  git-base_revision:
+    type: string
+    default: ""
+  git-revision:
+    type: string
+    default: ""
+
+orbs:
+  orb-tools: circleci/orb-tools@9.0.1
+  dscar-stylelint: naokikimura/dscar-stylelint@<< pipeline.parameters.dev-orb-version >>
+
+anchors:
+  dscar-default-executor: &dscar-default-executor
+    name: dscar-stylelint/default
+    project-git_url: << pipeline.parameters.project-git_url >>
+    git-base_revision: << pipeline.parameters.git-base_revision >>
+    git-revision: << pipeline.parameters.git-revision >>
+
+jobs:
+  integration-test-1:
+    executor:
+      <<: *dscar-default-executor
+    steps:
+      - checkout
+      - run: mkdir -p test && touch test/index.coffee
+      - dscar-stylelint/analyze
+
+workflows:
+  lint_pack-validate_publish-dev:
+    jobs:
+      - orb-tools/lint
+      - orb-tools/pack:
+          context: dscar
+          requires:
+            - orb-tools/lint
+      - orb-tools/publish-dev:
+          context: dscar
+          orb-name: naokikimura/dscar-stylelint
+          requires:
+            - orb-tools/pack
+      - orb-tools/trigger-integration-tests-workflow:
+          context: dscar
+          name: trigger-integration-dev
+          pipeline-param-map: |
+            {
+              \"run-integration-tests\": true,
+              \"dev-orb-version\": \"dev:${CIRCLE_SHA1:0:7}\",
+              \"project-git_url\": \"<< pipeline.project.git_url >>\",
+              \"git-base_revision\": \"<< pipeline.git.base_revision >>\",
+              \"git-revision\": \"<< pipeline.git.revision >>\"
+            }
+          requires:
+            - orb-tools/publish-dev
+    unless: << pipeline.parameters.run-integration-tests >>
+  integration-tests:
+    jobs:
+      - integration-test-1
+    when: << pipeline.parameters.run-integration-tests >>
