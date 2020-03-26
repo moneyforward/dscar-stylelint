@@ -54,12 +54,15 @@ steps:
             name: export TRANSFORMATION_ARGUMENTS
             command: |
               set -x
-              cat \<<-EOT >> $BASH_ENV
-              export TRANSFORMATION_ARGUMENTS=(
-                -rM
-                'flatten | map((@html "<file name=\"\(.source)\">") + "\(.warnings | map(@html "<error source=\"\(.rule)\" severity=\"\(.severity)\" message=\"\(.text)\" line=\"(.line)\" column=\"\(.column)\" />") | join(""))</file>") | "<checkstyle>\(join(""))</checkstyle>"'
-              )
+              FILTER="$(
+              cat \<<-"EOT" | tr -s ' \n' ' '
+              flatten | map((@html "<file name=\"\(.source)\">") + "\(.warnings | map(
+                @html "<error source=\"\(.rule)\" severity=\"\(.severity)\" message=\"\(.text)\" line=\"(.line)\" column=\"\(.column)\" />"
+              ) | join(""))</file>") | "<checkstyle>\(join(""))</checkstyle>"
               EOT
+              )"
+              declare -ax TRANSFORMATION_ARGUMENTS=( -srM "$FILTER" )
+              echo "$(declare -p TRANSFORMATION_ARGUMENTS)" >> $BASH_ENV
         - steps: << parameters.prepare >>
       analysis-command: npx
       analysis-arguments: stylelint << parameters.analysis-arguments >> --formatter=json --no-color --allow-empty-input
