@@ -34,7 +34,6 @@ jobs:
       <<: *dscar-default-executor
     steps:
       - checkout
-      - run: mkdir -p test && touch test/index.coffee
       - dscar-stylelint/analyze
 
 workflows:
