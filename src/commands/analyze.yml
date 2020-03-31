@@ -49,11 +49,17 @@ steps:
       step-name: Analyze code statically using stylelint
       analysis-name: stylelint
       prepare:
+        - steps: << parameters.prepare >>
         - run: sudo apt-get install jq
         - run:
             name: export TRANSFORMATION_ARGUMENTS
             command: |
               set -x
+
+              ANALYSIS_COMMAND=stylelint
+              declare -ax ANALYSIS_ARGUMENTS=("${ANALYSIS_COMMAND}" "${ANALYSIS_ARGUMENTS[@]}")
+              echo "$(declare -p ANALYSIS_ARGUMENTS)" >> $BASH_ENV
+
               FILTER="$(
               cat \<<-"EOT" | tr -s ' \n' ' '
               flatten | map((@html "<file name=\"\(.source)\">") + "\(.warnings | map(
@@ -63,9 +69,8 @@ steps:
               )"
               declare -ax TRANSFORMATION_ARGUMENTS=( -srM "$FILTER" )
               echo "$(declare -p TRANSFORMATION_ARGUMENTS)" >> $BASH_ENV
-        - steps: << parameters.prepare >>
       analysis-command: npx
-      analysis-arguments: stylelint << parameters.analysis-arguments >> --formatter=json --no-color --allow-empty-input
+      analysis-arguments: << parameters.analysis-arguments >> --formatter=json --no-color --allow-empty-input
       error-pattern: << parameters.error-pattern >>
       transformation-command: jq
       should-find: "true"
