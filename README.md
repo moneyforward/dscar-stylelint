@@ -1,5 +1,7 @@
 # dscar-stylelint
 
+[![CircleCI](https://circleci.com/gh/moneyforward/dscar-stylelint.svg?style=svg)](https://circleci.com/gh/moneyforward/dscar-stylelint)
+
 Delta [stylelint](https://stylelint.io/) reports running on CircleCI
 
 See https://circleci.com/orbs/registry/orb/moneyforward/dscar-stylelint for details.
